@@ -44,7 +44,7 @@ jobs:
       - name: Build app
         uses: tauri-apps/tauri-action@v0
         env:
-          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BUILD_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Password Manager v__VERSION__'
