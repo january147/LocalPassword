@@ -72,8 +72,9 @@ npm run tauri build
 1. 访问项目的 **Actions** 页面
 2. 选择最近的 **Build Tauri App** workflow
 3. 在 **Artifacts** 部分下载对应平台的安装包：
-   - `linux-bundle` - Linux 安装包
-   - `windows-bundle` - Windows 安装包
+   - `linux-bundle` - Linux 安装包 (DEB, AppImage, RPM)
+   - `windows-bundle` - Windows 安装包 (NSIS, MSI)
+   - `macos-bundle` - macOS 安装包 (DMG, APP)
 
 ### 创建发布版本
 
