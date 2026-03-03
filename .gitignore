@@ -1,0 +1,83 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+dist-ssr/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/.cargo/config
+src-tauri/gen/
+
+# Tauri build artifacts
+*.app
+*.dmg
+*.deb
+*.rpm
+*.exe
+*.msi
+*.AppImage
+*.sh
+*.tar.gz
+*.zip
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Debug files
+*.pid
+*.seed
+*.pid.lock
