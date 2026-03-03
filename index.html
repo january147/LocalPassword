@@ -1,41 +1,195 @@
-<script>
-    window.__TAURI__.ipc = {
-        messages: new Map(),
-        listeners: new Map(),
-        nextMessageId: 1,
-        listen(channel, callback) {
-            if (!this.listeners.has(channel)) {
-                this.listeners.set(channel, new Set());
-            }
-            this.listeners.get(channel).add(callback);
-        },
-        send(channel, payload, onerror) {
-            const id = this.nextMessageId++;
-            const message = { id, channel, payload };
-            this.messages.set(id, message);
-            window.__TAURI__.postMessage(message, '*');
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => reject(new Error('Timeout')), 30000);
-                message.resolve = resolve;
-                message.reject = reject;
-                message.timeout = timeout;
-            });
-        }
-    };
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager Raw</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>🔐 密码管理器</h1>
+            </div>
 
-    window.__TAURI__.postMessage = (message, _) => {
-        if (message.channel === 'ipc-plugin') {
-            const listeners = window.__TAURI__.ipc.listeners.get(message.payload.command);
-            if (listeners) {
-                listeners.forEach(listener => {
-                    try {
-                        const result = listener(message.payload.args);
-                        window.__TAURI__.ipc.messages.get(message.id).resolve(result);
-                    } catch (error) {
-                        window.__TAURI__.ipc.messages.get(message.id).reject(error);
-                    }
-                });
-            }
-        }
-    };
-</script>
+            <div class="categories">
+                <div class="category-item active" data-category="all">
+                    <span class="name">全部</span>
+                    <span class="count">0</span>
+                </div>
+                <div class="category-item" data-category="social">
+                    <span class="name">社交</span>
+                    <span class="count">0</span>
+                </div>
+                <div class="category-item" data-category="work">
+                    <span class="name">工作</span>
+                    <span class="count">0</span>
+                </div>
+                <div class="category-item" data-category="finance">
+                    <span class="name">金融</span>
+                    <span class="count">0</span>
+                </div>
+                <div class="category-item" data-category="shopping">
+                    <span class="name">购物</span>
+                    <span class="count">0</span>
+                </div>
+                <div class="category-item" data-category="other">
+                    <span class="name">其他</span>
+                    <span class="count">0</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div id="totalPasswords">总计: 0 个密码</div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <input type="text" id="search" placeholder="🔍 搜索密码..." class="search-input">
+                    <button id="refreshBtn" class="btn btn-secondary">刷新</button>
+                </div>
+                <div class="toolbar-right">
+                    <button id="addPasswordToolbar" class="btn btn-primary">+ 添加</button>
+                    <button id="editPassword" class="btn btn-secondary">编辑</button>
+                    <button id="deletePassword" class="btn btn-danger">删除</button>
+                </div>
+            </div>
+
+            <!-- 密码列表 -->
+            <div class="password-list-container">
+                <div id="passwordList" class="password-list"></div>
+                <div id="passwordCount" class="password-count">0 个密码</div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="bottom-bar">
+                <button id="generatePassword" class="btn btn-secondary">🔑 生成密码</button>
+                <button id="exportBtn" class="btn btn-secondary">📤 导出</button>
+                <button id="importBtn" class="btn btn-secondary">📥 导入</button>
+                <button id="settingsBtn" class="btn btn-secondary">⚙️ 设置</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加/编辑密码模态框 -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加密码</h2>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label>标题 *</label>
+                        <input type="text" id="titleInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="usernameInput">
+                    </div>
+                    <div class="form-group">
+                        <label>密码 *</label>
+                        <div class="password-input-group">
+                            <input type="password" id="passwordInput" required>
+                            <button type="button" id="togglePassword" class="icon-btn">👁️</button>
+                            <button type="button" id="generateInlinePassword" class="icon-btn">🔄</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>网站</label>
+                        <input type="url" id="websiteInput" placeholder="https://">
+                    </div>
+                    <div class="form-group">
+                        <label>分类</label>
+                        <select id="categorySelect">
+                            <option value="other">其他</option>
+                            <option value="social">社交</option>
+                            <option value="work">工作</option>
+                            <option value="finance">金融</option>
+                            <option value="shopping">购物</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="notesInput" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelModal" class="btn btn-secondary">取消</button>
+                <button id="savePassword" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密码生成器模态框 -->
+    <div id="generatorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>密码生成器</h2>
+                <button id="closeGenerator" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>生成的密码</label>
+                    <input type="text" id="generatedPassword" readonly>
+                </div>
+                <div class="form-group">
+                    <label>长度: <span id="lengthValue">16</span></label>
+                    <input type="range" id="lengthInput" min="8" max="64" value="16">
+                </div>
+                <div class="form-group">
+                    <label>选项</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="uppercase" checked> 大写字母 (A-Z)</label>
+                        <label><input type="checkbox" id="lowercase" checked> 小写字母 (a-z)</label>
+                        <label><input type="checkbox" id="numbers" checked> 数字 (0-9)</label>
+                        <label><input type="checkbox" id="symbols" checked> 特殊字符 (!@#$%^&*)</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="regenerate" class="btn btn-secondary">重新生成</button>
+                <button id="copyGenerated" class="btn btn-primary">复制</button>
+                <button id="cancelGenerator" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>确认</h2>
+                <button id="closeConfirm" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">确定要执行此操作吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelConfirm" class="btn btn-secondary">取消</button>
+                <button id="confirmAction" class="btn btn-danger">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div id="toast" class="toast"></div>
+
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 前端脚本 - 将由 Vite 打包 -->
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
