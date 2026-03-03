@@ -48,5 +48,4 @@ jobs:
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: true
           prerelease: false
-          args: |
-            --target ${{ matrix.platform == 'macos-latest' && 'universal-apple-darwin' || '' }}
+          args: ${{ matrix.platform == 'macos-latest' && '--target universal-apple-darwin' || '' }}
