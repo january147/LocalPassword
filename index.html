@@ -1,0 +1,41 @@
+<script>
+    window.__TAURI__.ipc = {
+        messages: new Map(),
+        listeners: new Map(),
+        nextMessageId: 1,
+        listen(channel, callback) {
+            if (!this.listeners.has(channel)) {
+                this.listeners.set(channel, new Set());
+            }
+            this.listeners.get(channel).add(callback);
+        },
+        send(channel, payload, onerror) {
+            const id = this.nextMessageId++;
+            const message = { id, channel, payload };
+            this.messages.set(id, message);
+            window.__TAURI__.postMessage(message, '*');
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Timeout')), 30000);
+                message.resolve = resolve;
+                message.reject = reject;
+                message.timeout = timeout;
+            });
+        }
+    };
+
+    window.__TAURI__.postMessage = (message, _) => {
+        if (message.channel === 'ipc-plugin') {
+            const listeners = window.__TAURI__.ipc.listeners.get(message.payload.command);
+            if (listeners) {
+                listeners.forEach(listener => {
+                    try {
+                        const result = listener(message.payload.args);
+                        window.__TAURI__.ipc.messages.get(message.id).resolve(result);
+                    } catch (error) {
+                        window.__TAURI__.ipc.messages.get(message.id).reject(error);
+                    }
+                });
+            }
+        }
+    };
+</script>

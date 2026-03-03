@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tauri-config.json",
+  "productName": "Password Manager Raw",
+  "version": "1.0.0",
+  "identifier": "com.passwordmanager.raw",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}
