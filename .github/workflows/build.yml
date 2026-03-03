@@ -23,7 +23,12 @@ jobs:
         if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf
+          # Install both webkit versions to ensure compatibility
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev || true
+          sudo apt-get install -y libwebkit2gtk-4.0-dev || sudo apt-get install -y libwebkit2gtk-4.1-dev
+          sudo apt-get install -y libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf
+          # Install additional dependencies that might be needed
+          sudo apt-get install -y libssl-dev libayatana-appindicator3-dev
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
