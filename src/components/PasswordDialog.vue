@@ -86,7 +86,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { User, Link, Refresh } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api/core'
-import { info, error } from 'tauri-plugin-log-api'
+import { info, error } from '../utils/logger'
 import { useAuthStore } from '../stores/auth'
 
 const props = defineProps({

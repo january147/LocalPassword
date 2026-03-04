@@ -49,7 +49,7 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Lock, Key } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api/core'
-import { info } from 'tauri-plugin-log-api'
+import { info } from '../utils/logger'
 
 const emit = defineEmits(['login'])
 

@@ -98,7 +98,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, More, CopyDocument, Edit, Delete } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api/core'
-import { info, error } from 'tauri-plugin-log-api'
+import { info, error } from '../utils/logger'
 import { useAuthStore } from '../stores/auth'
 import PasswordDialog from './PasswordDialog.vue'
 

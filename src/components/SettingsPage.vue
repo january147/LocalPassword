@@ -51,7 +51,7 @@
 import { reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Setting, FolderOpened } from '@element-plus/icons-vue'
-import { info } from 'tauri-plugin-log-api'
+import { info } from '../utils/logger'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()

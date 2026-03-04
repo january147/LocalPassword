@@ -17,10 +17,11 @@
               type="success"
               size="large"
               :icon="Download"
+              :loading="exporting"
               @click="handleExport"
               class="action-btn"
             >
-              导出密码
+              {{ exporting ? '导出中...' : '导出密码' }}
             </el-button>
           </div>
         </el-card>
@@ -42,11 +43,19 @@
               type="primary"
               size="large"
               :icon="Upload"
-              @click="handleImport"
+              :loading="importing"
+              @click="triggerImport"
               class="action-btn"
             >
-              导入密码
+              {{ importing ? '导入中...' : '导入密码' }}
             </el-button>
+            <input
+              ref="fileInput"
+              type="file"
+              accept=".json"
+              style="display: none"
+              @change="handleImport"
+            >
           </div>
         </el-card>
       </el-col>
@@ -55,37 +64,43 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Upload } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api/core'
-import { open, save } from '@tauri-apps/api/dialog'
-import { info, error } from 'tauri-plugin-log-api'
+import { info, error } from '../utils/logger'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
+const exporting = ref(false)
+const importing = ref(false)
+const fileInput = ref(null)
 
 // 导出密码
 const handleExport = async () => {
   try {
-    const filePath = await save({
-      defaultPath: 'passwords.json',
-      filters: [{
-        name: 'JSON',
-        extensions: ['json']
-      }]
-    })
-
-    if (!filePath) return
-
+    exporting.value = true
+    
     const result = await invoke('run_command', {
       command: authStore.pmPath,
-      args: ['--non-interactive', 'export', filePath, '--log-level', 'off'],
+      args: ['--non-interactive', 'export', 'passwords.json', '--log-level', 'off'],
       env: {
         PM_MASTER_PASSWORD: authStore.masterPassword
       }
     })
 
     if (result.code === 0) {
+      // 创建下载链接
+      const blob = new Blob([result.stdout], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'passwords.json'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
       ElMessage.success('导出成功')
       info('Passwords exported successfully')
     } else {
@@ -93,39 +108,60 @@ const handleExport = async () => {
     }
   } catch (err) {
     error('Failed to export passwords:', err)
-    ElMessage.error('导出失败：' + err)
+    ElMessage.error('导出失败：' + err.message)
+  } finally {
+    exporting.value = false
+  }
+}
+
+// 触发导入
+const triggerImport = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
   }
 }
 
 // 导入密码
-const handleImport = async () => {
+const handleImport = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
   try {
-    const filePath = await open({
-      filters: [{
-        name: 'JSON',
-        extensions: ['json']
-      }]
+    importing.value = true
+    
+    // 读取文件内容
+    const content = await file.text()
+    
+    // 将文件保存到临时路径（使用 Tauri 的文件系统 API）
+    const result = await invoke('save_temp_file', {
+      content: content
     })
 
-    if (!filePath) return
+    if (result.success) {
+      const importResult = await invoke('run_command', {
+        command: authStore.pmPath,
+        args: ['--non-interactive', 'import', result.path, '--log-level', 'off'],
+        env: {
+          PM_MASTER_PASSWORD: authStore.masterPassword
+        }
+      })
 
-    const result = await invoke('run_command', {
-      command: authStore.pmPath,
-      args: ['--non-interactive', 'import', filePath, '--log-level', 'off'],
-      env: {
-        PM_MASTER_PASSWORD: authStore.masterPassword
+      if (importResult.code === 0) {
+        ElMessage.success('导入成功')
+        info('Passwords imported successfully')
+      } else {
+        ElMessage.error('导入失败')
       }
-    })
-
-    if (result.code === 0) {
-      ElMessage.success('导入成功')
-      info('Passwords imported successfully')
     } else {
-      ElMessage.error('导入失败')
+      ElMessage.error('保存文件失败')
     }
   } catch (err) {
     error('Failed to import passwords:', err)
-    ElMessage.error('导入失败：' + err)
+    ElMessage.error('导入失败：' + err.message)
+  } finally {
+    importing.value = false
+    // 清空 input
+    event.target.value = ''
   }
 }
 </script>
