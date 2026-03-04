@@ -21,7 +21,6 @@
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "pinia": "^2.1.0"
-    "localpassword-gui": { "path": "../password-manager", "link": true }
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
