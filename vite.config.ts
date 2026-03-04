@@ -1,22 +1,29 @@
 import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
-export default defineConfig({
-  plugins: [],
+// https://vitejs.dev/config/
+export default defineConfig(async () => ({
+  plugins: [vue()],
   clearScreen: false,
   server: {
     port: 1420,
     strictPort: true,
-    host: '0.0.0.0',
-    hmr: false
+    watch: {
+      ignored: ['**/src-tauri/**'],
+    },
+  },
+  envPrefix: ['VITE_', 'TAURI_'],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
   },
   build: {
-    target: 'esnext',
-    outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        main: './index.html'
-      }
-    }
-  }
-})
+    target: process.env.TAURI_PLATFORM == 'windows' ? 'chrome105' : 'safari13',
+    // don't minify for debug builds
+    minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
+    // produce sourcemaps for debug builds
+    sourcemap: !!process.env.TAURI_DEBUG,
+  },
+}))
