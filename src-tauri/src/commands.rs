@@ -1,15 +1,27 @@
+use std::process::Command;
+use std::env;
+
 #[tauri::command]
-pub async fn list_passwords() -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
-        .arg("list")
-        .output()
+pub async fn list_passwords(master_password: Option<String>) -> Result<String, String> {
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("list");
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.output()
         .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn add_password(
+    master_password: Option<String>,
     title: String,
     username: String,
     password: String,
@@ -17,12 +29,20 @@ pub async fn add_password(
     notes: Option<String>,
     category: Option<String>
 ) -> Result<String, String> {
-    // 调用 pm 命令
-    let mut cmd = std::process::Command::new("pm");
-    cmd.arg("add");
-    cmd.arg(&title);
-    cmd.arg(&username);
-    cmd.arg(&password);
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("add");
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.arg(&title)
+       .arg(&username)
+       .arg(&password);
 
     if let Some(website) = website {
         cmd.arg("--website");
@@ -46,6 +66,7 @@ pub async fn add_password(
 
 #[tauri::command]
 pub async fn update_password(
+    master_password: Option<String>,
     id: String,
     title: String,
     username: String,
@@ -54,13 +75,21 @@ pub async fn update_password(
     notes: Option<String>,
     category: Option<String>
 ) -> Result<String, String> {
-    // 调用 pm 命令
-    let mut cmd = std::process::Command::new("pm");
-    cmd.arg("update");
-    cmd.arg(&id);
-    cmd.arg(&title);
-    cmd.arg(&username);
-    cmd.arg(&password);
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("update");
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.arg(&id)
+       .arg(&title)
+       .arg(&username)
+       .arg(&password);
 
     if let Some(website) = website {
         cmd.arg("--website");
@@ -83,12 +112,21 @@ pub async fn update_password(
 }
 
 #[tauri::command]
-pub async fn delete_password(id: String) -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
-        .arg("delete")
-        .arg(&id)
-        .output()
+pub async fn delete_password(master_password: Option<String>, id: String) -> Result<String, String> {
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("delete")
+       .arg(&id)
+       .arg("--force");
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.output()
         .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
         .map_err(|e| e.to_string())
 }
@@ -101,11 +139,10 @@ pub async fn generate_password(
     numbers: bool,
     symbols: bool
 ) -> Result<String, String> {
-    // 调用 pm 命令
-    let mut cmd = std::process::Command::new("pm");
-    cmd.arg("generate");
-    cmd.arg("--length");
-    cmd.arg(length.to_string());
+    let mut cmd = Command::new("pm");
+    cmd.arg("generate")
+       .arg("--length")
+       .arg(length.to_string());
 
     if uppercase {
         cmd.arg("--uppercase");
@@ -126,31 +163,46 @@ pub async fn generate_password(
 }
 
 #[tauri::command]
-pub async fn export_passwords(path: String) -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
-        .arg("export")
-        .arg(&path)
-        .output()
+pub async fn export_passwords(master_password: Option<String>, path: String) -> Result<String, String> {
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("export")
+       .arg(&path);
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.output()
         .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn import_passwords(path: String) -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
-        .arg("import")
-        .arg(&path)
-        .output()
+pub async fn import_passwords(master_password: Option<String>, path: String) -> Result<String, String> {
+    let mut cmd = Command::new("pm");
+    cmd.arg("--non-interactive")
+       .arg("--log-level")
+       .arg("off")
+       .arg("import")
+       .arg(&path);
+
+    // 设置主密码环境变量
+    if let Some(pwd) = master_password {
+        cmd.env("PM_MASTER_PASSWORD", pwd);
+    }
+
+    cmd.output()
         .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn init_database() -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
+    Command::new("pm")
         .arg("init")
         .arg("--force")
         .output()
@@ -160,8 +212,7 @@ pub async fn init_database() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn cleanup_database() -> Result<String, String> {
-    // 调用 pm 命令
-    std::process::Command::new("pm")
+    Command::new("pm")
         .arg("cleanup")
         .output()
         .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
