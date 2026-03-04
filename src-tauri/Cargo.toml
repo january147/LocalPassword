@@ -1,6 +1,6 @@
 [package]
-name = "password_manager_raw"
-version = "2.0.0"
+name = "localpassword-gui"
+version = "2.0.1"
 edition = "2021"
 
 [dependencies]

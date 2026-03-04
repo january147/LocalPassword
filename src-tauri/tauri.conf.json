@@ -1,18 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tauri-config.json",
-  "productName": "Password Manager Raw",
-  "version": "1.0.0",
-  "identifier": "com.passwordmanager.raw",
+  "productName": "LocalPassword GUI",
+  "version": "2.0.1",
+  "identifier": "com.localpassword.gui",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173"
+    "devUrl": "http://localhost:1420"
   },
   "app": {
     "windows": [
       {
-        "title": "Password Manager Raw",
+        "title": "LocalPassword GUI",
         "width": 1200,
         "height": 800,
         "resizable": true,

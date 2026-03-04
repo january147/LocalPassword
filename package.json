@@ -1,6 +1,6 @@
 {
-  "name": "password-manager",
-  "version": "2.0.0",
+  "name": "localpassword-gui",
+  "version": "2.0.1",
   "description": "Modern Password Manager with Vue 3 + Element Plus",
   "type": "module",
   "scripts": {
